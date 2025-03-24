@@ -133,7 +133,7 @@
 \end{itemize}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.5\textwidth]{figure/model1.png}
+  \includegraphics[width=0.5\textwidth]{figure/exp1/model1.png}
   \caption{信号采样与重建仿真模型}
   \label{fig:model1}
 \end{figure}
@@ -141,19 +141,19 @@
 \begin{figure}[htbp]
   \centering
   \subfloat[默认参数下的信号采样重建波形\label{fig:sim1}]{
-    \includegraphics[width=0.45\textwidth]{figure/sim1.pdf}
+    \includegraphics[width=0.45\textwidth]{figure/exp1/sim1.pdf}
   }
   \hfill
   \subfloat[$f_s$=1.5kHz时的采样重建波形\label{fig:sim2}]{
-    \includegraphics[width=0.45\textwidth]{figure/sim2.pdf}
+    \includegraphics[width=0.45\textwidth]{figure/exp1/sim2.pdf}
   }
   \newline
   \subfloat[低通滤波器截止频率为5kHz时的信号重建\label{fig:sim3}]{
-    \includegraphics[width=0.45\textwidth]{figure/sim3.pdf}
+    \includegraphics[width=0.45\textwidth]{figure/exp1/sim3.pdf}
   }
   \hfill
   \subfloat[冲激信号占空比50\%时的信号重建\label{fig:sim4}]{
-    \includegraphics[width=0.45\textwidth]{figure/sim4.pdf}
+    \includegraphics[width=0.45\textwidth]{figure/exp1/sim4.pdf}
   }
   \caption{信号采样与重建时域仿真结果}
   \label{fig:sim}
@@ -174,7 +174,7 @@
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.65\textwidth]{figure/model2.png}
+  \includegraphics[width=0.65\textwidth]{figure/exp1/model2.png}
   \caption{信号采样与重建频域仿真模型}
   \label{fig:model2}
 \end{figure}
@@ -189,26 +189,26 @@
 
 \begin{figure}[htbp]
     \centering
-    \subfloat[采样前的时域波形\label{fig:sim2_1}]{\includegraphics[width=0.95\textwidth]{figure/sim2_1.pdf}}
+    \subfloat[采样前的时域波形\label{fig:sim2_1}]{\includegraphics[width=0.95\textwidth]{figure/exp1/sim2_1.pdf}}
     \newline
-    \subfloat[采样后的时域波形\label{fig:sim2_2}]{\includegraphics[width=0.47\textwidth,angle=-90]{figure/sim2_2.pdf}}
+    \subfloat[采样后的时域波形\label{fig:sim2_2}]{\includegraphics[width=0.47\textwidth,angle=-90]{figure/exp1/sim2_2.pdf}}
     \caption{时域波形仿真结果}
 \end{figure}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.75\textwidth]{figure/30M.png}
+  \includegraphics[width=0.75\textwidth]{figure/exp1/30M.png}
   \caption{采样频率为30MHz下的输出频谱}
   \label{fig:spectrum30}
 \end{figure}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=.75\textwidth]{figure/10M.png}
+  \includegraphics[width=.75\textwidth]{figure/exp1/10M.png}
   \caption{采样频率为10MHz下的输出频谱}
   \label{fig:spectrum10}
 \end{figure}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=.75\textwidth]{figure/10M.png}
+  \includegraphics[width=.75\textwidth]{figure/exp1/3M.png}
   \caption{采样频率为3MHz下的输出频谱}
   \label{fig:spectrum3}
 \end{figure}
@@ -260,7 +260,7 @@ grid on;
 仿真结果如图~\ref{fig:fig1}~所示。可以看到频谱在50Hz、500Hz、1000Hz三处分别有一根谱线，这是正弦波的傅里叶变换特性，也证明了频谱分析的意义。
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.65\textwidth]{figure/fig1.eps}
+  \includegraphics[width=0.65\textwidth]{figure/exp1/fig1.eps}
   \caption{8000Hz采样后的时域频域谱}
   \label{fig:fig1}
 \end{figure}
@@ -318,7 +318,7 @@ grid on;
 \end{remark}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.65\textwidth]{figure/fig2.eps}
+  \includegraphics[width=0.65\textwidth]{figure/exp1/fig2.eps}
   \caption{800Hz采样后的时域频域谱}
   \label{fig:fig2}
 \end{figure}
@@ -398,13 +398,13 @@ grid on
 仿真结果如图~\ref{fig:fig3}~、~\ref{fig:fig4}~所示，经检验发现符合题目要求。
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.65\textwidth]{figure/fig3.eps}
+  \includegraphics[width=0.65\textwidth]{figure/exp1/fig3.eps}
   \caption{原信号，$M=4$抽取，$L=3$内插后的时域谱}
   \label{fig:fig3}
 \end{figure}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.65\textwidth]{figure/fig4.eps}
+  \includegraphics[width=0.65\textwidth]{figure/exp1/fig4.eps}
   \caption{原信号，$M=4$抽取，$L=3$内插后的频域谱}
   \label{fig:fig4}
 \end{figure}
@@ -469,14 +469,14 @@ grid on
 仿真结果如图~\ref{fig:fig5}~、~\ref{fig:fig6}~所示。经检验发现符合题目要求。
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.65\textwidth]{figure/fig5.eps}
+  \includegraphics[width=0.65\textwidth]{figure/exp1/fig5.eps}
   \caption{5/3采样率转换后的时域谱}
   \label{fig:fig5}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.65\textwidth]{figure/fig6.eps}
+  \includegraphics[width=0.65\textwidth]{figure/exp1/fig6.eps}
   \caption{5/3采样率转换后的频域谱}
   \label{fig:fig6}
 \end{figure}
