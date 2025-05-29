@@ -8,20 +8,21 @@
 \end{introduction}
 
 \section{实验背景与目的}
-在数字信号处理领域，FIR滤波器的设计和实现是一个重要的研究方向。相比于手动设计滤波器，使用FPGA厂商提供的IP核可以大幅简化设计流程，并提高设计的可靠性和效率。本实验旨在通过Xilinx FIR Compiler IP核实现一个FIR滤波器，研究其实现过程，并分析其资源消耗和性能。
+在数字信号处理领域，IIR滤波器的设计与实现同样具有重要意义。相较于FIR滤波器，IIR滤波器在满足同样滤波性能的情况下通常具有更低的阶数和更少的资源开销。使用FPGA厂商提供的IIR滤波器IP核可以简化设计流程，并提高设计的可靠性和实现效率。本实验旨在通过Xilinx IIR Filter IP核实现一个IIR滤波器，研究其实现过程，并分析其资源消耗与性能表现。
 
 \section{实验原理}
-\subsection{FIR Compiler IP核简介}
-Xilinx FIR Compiler IP核是一个高效的FIR滤波器实现工具，支持多种滤波器结构（如直接型、对称型等）和优化选项（如资源优化、性能优化）。通过该IP核，可以快速生成满足设计需求的FIR滤波器。
+\subsection{IIR Filter IP核简介}
+Xilinx IIR Filter IP核是一个灵活且高效的IIR滤波器实现模块，支持多种滤波器类型（如巴特沃斯、切比雪夫等）和结构形式（如直接型II、级联型等）。该IP核允许用户根据具体应用需求，通过指定滤波器系数和控制参数来生成定制化的IIR滤波器。
 
 \subsection{设计流程}
-使用FIR Compiler IP核设计FIR滤波器的基本流程如下：
+使用IIR Filter IP核设计IIR滤波器的基本流程如下：
 \begin{enumerate}
-    \item \textbf{确定滤波器参数：} 使用MATLAB或其他工具生成滤波器系数；
-    \item \textbf{配置IP核：} 在Vivado中添加FIR Compiler IP核，并根据设计需求配置其参数；
-    \item \textbf{生成IP核：} 生成IP核并集成到设计中；
-    \item \textbf{验证功能：} 通过仿真和硬件测试验证滤波器的功能和性能。
+    \item \textbf{确定滤波器参数：} 使用MATLAB或其他工具设计IIR滤波器并导出滤波器系数（如SOS矩阵）； 
+    \item \textbf{配置IP核：} 在Vivado中添加IIR Filter IP核，并根据设计需求配置其滤波器类型、结构形式、系数格式等参数；
+    \item \textbf{生成IP核：} 生成配置好的IP核并将其集成至顶层设计中；
+    \item \textbf{验证功能：} 通过仿真和上板测试，验证IIR滤波器在时域和频域上的表现，并评估其资源利用率和实时性能。
 \end{enumerate}
+
 \section{实验使用软件/平台}
 \begin{itemize}
     \item Xilinx Vivado 2024.2；
@@ -31,71 +32,161 @@ Xilinx FIR Compiler IP核是一个高效的FIR滤波器实现工具，支持多�
   \end{itemize}
 \section{实验内容}
 \subsection{滤波器系数生成}
-使用MATLAB的\texttt{Filter Designer}工具生成低通滤波器的系数，具体配置如下：
+使用MATLAB的\texttt{Filter Designer}工具生成IIR滤波器低通滤波器的系数，具体配置如下：
 \begin{itemize}
-    \item 滤波器类型：低通滤波器；
-    \item 通带边界：800kHz；
-    \item 阻带边界：3.2MHz；
-    \item 采样频率：20MHz；
-    \item 量化：12位定点数，1位整数部分，11位小数部分。
+    \item 滤波器类型：低通滤波器，Chebychev II型；
+    \item 截止频率：12.5MHz；
+    \item 采样频率：50MHz；
+    \item 阶数：7；
+    \item 节数（自动优化）：4；
+    \item 量化：12位定点数，最大精度。
 \end{itemize}
 
-图~\ref{fig:filter_coefficients}展示了生成的FIR滤波器的幅频和相频特性。可以看到，滤波器在800kHz以下的频率范围内具有良好的通带特性，而在3.2MHz以上的频率范围内则具有较好的阻带特性。量化前后幅频、相频特性均变化较小，不影响性能。
+图~\ref{fig:ex8:filter_coefficients}展示了生成的IIR滤波器的幅频和相频特性。可以看到，滤波器在800kHz以下的频率范围内具有良好的通带特性，而在12.5MHz以上的频率范围内则具有较好的阻带特性。量化前后幅频、相频特性均变化较小，不影响性能。相较FIR滤波器，其过渡带宽相对较宽。
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figure/exp7/filterDesign.png}
-    \caption{FIR滤波器参考/量化后幅频、相频特性}
-    \label{fig:filter_coefficients}
+    \includegraphics[width=0.8\textwidth]{figure/exp8/filterDesign.png}
+    \caption{IIR滤波器参考/量化后幅频、相频特性}
+    \label{fig:ex8:filter_coefficients}
 \end{figure}
 
-生成的滤波器系数导出为文本文件，用于配置FIR Compiler IP核。
-
-\subsection{FIR Compiler IP核配置}
-在Vivado中添加FIR Compiler IP核，并根据以下参数进行配置：
-\begin{itemize}
-    \item 滤波器结构：对称型；
-    \item 系数输入方式：从文件导入，文件为MATLAB滤波器设计工具生成的\texttt{coe}文件；
-    \item 数据位宽：输入12位有符号数，输出24位有符号数；
-    \item 系数位宽：12位定点有符号数；
-    \item 时钟、采样频率：20MHz（仿真时使用50MHz）。
-\end{itemize}
-\subsection{基于IP核的FIR滤波器设计}
-仅需例化FIR Compiler IP核生成的模块即可，设计代码如代码~\ref{lst:fir_ip_ex}：
-\begin{lstlisting}[language=verilog,caption={基于IP核的FIR滤波器设计},label=lst:fir_ip_ex]
-    `timescale 1ns / 1ps
-module fir_ip_ex (
-           input                rst,  // Posedge
-           input                clk,  // 20MHz
-           input  signed [11:0] Xin,
-           output signed [23:0] Yout
-       );  //滤波后的输出数据
-
-wire s_data_tready;
-wire m_data_tvalid;
-wire s_data_tvalid;
-assign s_data_tvalid = !rst;
-
-FIR fir_lp15 (
-        .aclk              (clk),            // input wire aclk
-        .s_axis_data_tvalid(s_data_tvalid),  // input wire s_axis_data_tvalid
-        .s_axis_data_tready(s_data_tready),  // output wire s_axis_data_tready
-        .s_axis_data_tdata (Xin),            // input wire [15 : 0] s_axis_data_tdata
-        .m_axis_data_tvalid(m_data_tvalid),  // output wire m_axis_data_tvalid
-        .m_axis_data_tdata (Yout)            // output wire [23 : 0] m_axis_data_tdata
-    );
+查看生成的滤波器系数，该滤波器系数将会在分子、分母计算的RTL代码中使用。
 
 
+\subsection{IIR滤波器设计}
+采用三个模块分别计算零点结果，极点结果和总结果。采用反馈结构进行计算，设计代码如下：
+\begin{lstlisting}[language=verilog,caption={零点系数部分},label=lst:zp]
+module ZeroParallel (
+    input rst, // Reset signal, active high
+    input clk, // FPGA system clock, 50MHz
+    input signed [11:0] Xin, // Input data, 50MHz
+    output signed [20:0] Xout // Output filtered data
+);
+ // Shift register for input samples
+reg signed [11:0] Xin_Reg [6:0];
+reg [3:0] i, j;
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        for (i = 0; i < 7; i = i + 1)
+            Xin_Reg[i] <= 12'd0;
+    end else begin
+        for (j = 0; j < 6; j = j + 1)
+            Xin_Reg[j+1] <= Xin_Reg[j];
+        Xin_Reg[0] <= Xin;
+    end
+end
+// Sum symmetric inputs
+wire signed [12:0] Add_Reg [3:0];
+assign Add_Reg[0] = Xin + Xin_Reg[6];
+assign Add_Reg[1] = Xin_Reg[0] + Xin_Reg[5];
+assign Add_Reg[2] = Xin_Reg[1] + Xin_Reg[4];
+assign Add_Reg[3] = Xin_Reg[2] + Xin_Reg[3];
+// Multiply by coefficients using shifts and additions
+wire signed [20:0] Mult_Reg [3:0];
+assign Mult_Reg[0] = {{6{Add_Reg[0][12]}}, Add_Reg[0], 2'd0}
++ {{7{Add_Reg[0][12]}}, Add_Reg[0], 1'd0}
++ {{8{Add_Reg[0][12]}}, Add_Reg[0]}; // *7
+assign Mult_Reg[1] = {{4{Add_Reg[1][12]}}, Add_Reg[1], 4'd0}
++ {{6{Add_Reg[1][12]}}, Add_Reg[1], 2'd0}
++ {{8{Add_Reg[1][12]}}, Add_Reg[1]}; // *21
+assign Mult_Reg[2] = {{3{Add_Reg[2][12]}}, Add_Reg[2], 5'd0}
++ {{5{Add_Reg[2][12]}}, Add_Reg[2], 3'd0}
++ {{7{Add_Reg[2][12]}}, Add_Reg[2], 1'd0}; // *42
+assign Mult_Reg[3] = {{3{Add_Reg[3][12]}}, Add_Reg[3], 5'd0}
++ {{4{Add_Reg[3][12]}}, Add_Reg[3], 4'd0}
++ {{5{Add_Reg[3][12]}}, Add_Reg[3], 3'd0}; // *56
+// Sum results
+assign Xout = Mult_Reg[0] + Mult_Reg[1] + Mult_Reg[2] + Mult_Reg[3];
+endmodule
+\end{lstlisting}
+\begin{lstlisting}[language=verilog,caption={极点系数部分}]
+module PoleParallel (
+    input rst, // Reset signal, active high
+    input clk, // FPGA system clock, 50MHz
+    input signed [11:0] Yin, // Input data, 50MHz
+    output signed [25:0] Yout // Output filtered data
+);
+// Shift register for previous outputs
+reg signed [11:0] Yin_Reg [6:0];
+reg [3:0] i, j;
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        for (i = 0; i < 7; i = i + 1)
+            Yin_Reg[i] <= 12'd0;
+    end else begin
+        for (j = 0; j < 6; j = j + 1)
+            Yin_Reg[j+1] <= Yin_Reg[j];
+        Yin_Reg[0] <= Yin;
+    end
+end
 
+// Coefficients (12-bit signed)
+wire signed [11:0] coe [7:0];
+assign coe[1] = -12'd922;
+assign coe[2] = 12'd1163;
+assign coe[3] = -12'd811;
+assign coe[4] = 12'd412;
+assign coe[5] = -12'd122;
+assign coe[6] = 12'd24;
+assign coe[7] = -12'd2;
+
+// Multiplier outputs
+wire signed [22:0] Mult_Reg [6:0];
+MULT Umult1 (.A(coe[1]), .B(Yin_Reg[0]), .P(Mult_Reg[0]));
+MULT Umult2 (.A(coe[2]), .B(Yin_Reg[1]), .P(Mult_Reg[1]));
+MULT Umult3 (.A(coe[3]), .B(Yin_Reg[2]), .P(Mult_Reg[2]));
+MULT Umult4 (.A(coe[4]), .B(Yin_Reg[3]), .P(Mult_Reg[3]));
+MULT Umult5 (.A(coe[5]), .B(Yin_Reg[4]), .P(Mult_Reg[4]));
+MULT Umult6 (.A(coe[6]), .B(Yin_Reg[5]), .P(Mult_Reg[5]));
+MULT Umult7 (.A(coe[7]), .B(Yin_Reg[6]), .P(Mult_Reg[6]));
+// Sum multiplier outputs
+assign Yout = Mult_Reg[0] + Mult_Reg[1] + Mult_Reg[2]
++ Mult_Reg[3] + Mult_Reg[4] + Mult_Reg[5] + Mult_Reg[6];
+endmodule
+\end{lstlisting}
+\begin{lstlisting}[language=verilog,caption={IIR滤波器整合}]
+module IIRDirect (
+    input rst, // Reset signal, active high
+    input clk, // FPGA system clock, 50MHz
+    input signed [11:0] din, // Input data
+    output signed [11:0] dout // Output filtered data
+);
+// Instantiate Zero Parallel block
+wire signed [20:0] Xout;
+ZeroParallel U0 (
+    .rst(rst),
+    .clk(clk),
+    .Xin(din),
+    .Xout(Xout)
+);
+// Instantiate Pole Parallel block
+wire signed [11:0] Yin;
+wire signed [25:0] Yout;
+PoleParallel U1 (
+    .rst(rst),
+    .clk(clk),
+    .Yin(Yin),
+    .Yout(Yout)
+);
+// Calculate output: (Zero - Pole) / 512
+wire signed [25:0] Ysum;
+assign Ysum = {{5{Xout[20]}}, Xout} - Yout;
+wire signed [25:0] Ydiv;
+assign Ydiv = {{9{Ysum[25]}}, Ysum[25:9]}; // Arithmetic shift right by 9 (divide by
+512)
+// Final output assignment
+assign Yin = (rst ? 12'd0 : Ydiv[11:0]);
+assign dout = Yin;
 endmodule
 \end{lstlisting}
 \subsection{仿真测试}
-Testbench代码如代码~\ref{lst:fir_ip_tb}所示，使用Vivado的仿真工具进行功能验证。采用\textit{Clock Wizard}产生50MHz仿真时钟，输入激励分别为：
+Testbench代码如代码~\ref{lst:iir_ip_tb}所示，使用Vivado的仿真工具进行功能验证。采用\textit{Clock Wizard}产生50MHz仿真时钟，输入激励分别为：
 \begin{itemize}
-    \item 1MHz和10MHz的正弦波叠加信号;
+    \item 两个不同频率的正弦波叠加信号;
     \item 白噪声信号。
 \end{itemize}
 
-输入激励信号由MATLAB生成，代码如下。
+输入激励信号由MATLAB生成（也可以使用自动生成框架中的\texttt{gen\_sine\_wave}函数，代码如下。
 \begin{lstlisting}
     [language=matlab,caption={MATLAB生成激励代码},label=lst:fir_ip_tb_matlab]
     %sim_data_gen.m
@@ -198,107 +289,71 @@ Testbench代码如代码~\ref{lst:fir_ip_tb}所示，使用Vivado的仿真工具
     fprintf(fid,';'); 
     fclose(fid);
     \end{lstlisting}
-输出为经过FIR滤波器处理后的信号。
-\begin{lstlisting}[language=verilog,caption={FIR滤波器的Testbench},label=lst:fir_ip_tb]
+输出为经过IIR滤波器处理后的信号。
+\begin{lstlisting}[language=verilog,caption={IIR滤波器的Testbench},label=lst:iir_ip_tb]
 `timescale 1ns / 1ps
-
-module tb_FIR;
-    
-      // Inputs
-      reg rst;
-      wire clk;
-      wire clk_20M;
-      reg clk_100M;
-      wire signed [11:0] Xin;
-      wire signed [13:0] Xin_DAC;  // 14 bits signed
-      // Outputs
-    
-      wire signed [23:0] Yout;
-    
-      initial begin
-        // Initialize Inputs
-        rst = 1;
-        clk_100M = 0;
-    
-    
-        // Wait 100 ns for global reset to finish
-        #100;
-        rst = 0;
-        // Add stimulus here
-    
-      end
-      always #5 clk_100M = ~clk_100M;  // 100MHz
-    
-      clk20m inst_clk20m (
-          // Clock out ports
-          .clk_out_20m(clk_20M),  // output clk_out_20M
-          .clk_out_50m(clk),  // output clk_out_50M
-          // Status and control signals
-          .locked     (),     // output locked
-          // Clock in ports
-          .clk_in1    (clk)   // input clk_in1
-      );
-    
-    
-    
-      INPUT_GENERATOR #(
-          .CTRL_WORD_P(16'h51E),  // 1M
-          .CTRL_WORD_Q(16'h28F5)  // 8M
-      ) input_gen (
-          .i_clk(clk),
-          .o_sin_add(Xin),
-          .o_sin_add_DAC(Xin_DAC)
-      );
-    
-      fir_ip_ex sim (
-          .rst (rst),
-          .clk (clk),  //系统时钟50MHz
-          .Xin (Xin),  //输入数据
-          .Yout(Yout)  //输出数据
-      );
-    
-      //从外部i文件读入数据作为测试激励
-      //   integer i = 0;
-      //   parameter sim_len = 2000;
-      //   reg [11:0] sim_data[1:sim_len];
-      //   always @(posedge clk) begin
-      //     $readmemb("/home/liptp/ex_7/ex_7.srcs/sources_1/new/Bin_sin12.txt", sim_data);
-      //     //    $readmemb("./Bin_noise12.txt",sim_data);
-      //     i   = i + 1;
-      //     Xin = sim_data[i];
-      //   end
-    
-      //将仿真数据dout写入外部TXT文件中
-      integer file_out;
-      initial begin
-    
-        file_out = $fopen("/home/liptp/ex_7/ex_7.srcs/sim_1/new/sin_filter_out.txt");
-        //file_out = $fopen("D:/dsp_lab_data/noise_filter_out.txt");
-        if (!file_out) begin
-          $display("could not open file!");
-          $finish;
-        end
-      end
-    
-      //将输出数据写入指定文本文件中
-      wire rst_write;
-    
-      //产生写入时钟信号，复位状态时不写入数据
-      assign rst_write = clk & (!rst);
-      always @(posedge rst_write) $fdisplay(file_out, "%d", Yout);
-    
-endmodule    
+module tb_IIR(
+);
+// Inputs
+reg rst;
+reg clk;
+reg signed [11:0] Xin;
+// Outputs
+wire signed [11:0] Yout;
+initial begin
+    // Initialize Inputs
+    rst = 1;
+    clk = 0;
+    // Wait 100 ns for global reset to finish
+    #100;
+    rst = 0;
+    // Add stimulus here
+end
+always #10 clk <= !clk;
+IIRDirect sim(
+    .rst(rst),
+    .clk(clk), //系统时钟 50MHz
+    .din(Xin), //输入数据
+    .dout(Yout) //输出数据
+);
+//从外部 i 文件读入数据作为测试激励
+integer i = 0;
+parameter sim_len = 2000;
+reg [11:0] sim_data[1:sim_len];
+always @(posedge clk) begin
+//
+    $readmemb("./Bin_sin12.txt",sim_data);
+    // $readmemb("./Bin_noise12.txt",sim_data);
+    i = i + 1;
+    Xin=sim_data[i];
+end
+//将仿真数据 dout 写入外部 TXT 文件中
+integer file_out;
+initial begin
+//
+file_out = $fopen("./sin_filter_out.txt");
+// file_out = $fopen("./noise_filter_out.txt");
+if(!file_out) begin
+    $display("could not open file!");
+    $finish;
+end
+end
+//将输出数据写入指定文本文件中
+wire rst_write;
+//产生写入时钟信号，复位状态时不写入数据
+assign rst_write = clk & (!rst);
+always @(posedge rst_write)
+$fdisplay(file_out,"%d",Yout);
+endmodule
 \end{lstlisting}
 
-波形仿真结果（图~\ref{fig:exp7:sim_result}~）表明，滤波器能够有效滤除两种信号中的高频分量，保留低频分量。
+波形仿真结果（图~\ref{fig:exp8:sim_result}~）表明，滤波器能够有效滤除白噪声中的高频分量，保留低频分量。
 
 \begin{figure}[htbp]
     \centering
-    \subfloat[正弦叠加信号]{\includegraphics[width=0.45\textwidth]{figure/exp7/sim_sine.png}}
-    \hfill
-    \subfloat[白噪声信号]{\includegraphics[width = 0.45\textwidth]{figure/exp7/sim_noise.png}}
+    \includegraphics[width = 0.85\textwidth]{figure/exp8/sim_noise.png}
     \caption{仿真结果} 
-    \label{fig:exp7:sim_result}   
+    \label{fig:exp8:sim_result}   
 \end{figure}
 
 将仿真文件输出的结果写入文本文件中，使用MATLAB进行后续分析。MATLAB代码如下（代码~\ref{lst:fir_ip_tb_matlab}~），绘制了经过滤波器处理后的信号的幅频响应曲线。可以看到，经过滤波器处理后，信号的高频分量被有效滤除，保留了低频分量。
@@ -342,7 +397,7 @@ grid on;
     \label{fig:exp7:matlab_results}
 \end{figure}
 \subsection{硬件实现与验证}
-将生成的FIR Compiler IP核集成到设计中，连接板载输入输出信号，并通过ILA波形和示波器波形验证滤波器的功能。测试输入信号为叠加的250kHz和4MHz正弦波，测试时钟为20MHz，验证滤波器是否能够有效滤除4MHz分量。
+将生成的IIR滤波器集成到设计中，连接板载输入输出信号，并通过ILA波形和示波器波形验证滤波器的功能。测试输入信号为叠加的250kHz和4MHz正弦波，测试时钟为20MHz，验证滤波器是否能够有效滤除4MHz分量。
 
 顶层模块代码如下：
 \begin{lstlisting}[language=verilog,caption={顶层模块代码},label=lst:top_module]
@@ -403,16 +458,16 @@ module top_mod (
               .probe1(LS_DAC2_DB)  // input wire [13:0]  probe1
           );
     
-    fir_ip_ex fir (
-                  .rst (1'b0),  // Posedge
+    IIRDirect inst_iir (
+                  .rst (!clk_locked),  // Posedge
                   .clk (clk_20M),   // 20MHz
-                  .Xin (xin_ADC),
-                  .Yout(yout)
+                  .din (xin_ADC),
+                  .dout(yout)
               );
     
     INPUT_GENERATOR #(
-                        .CTRL_WORD_P(16'h199),  // 0.25M
-                        .CTRL_WORD_Q(16'h1999)  // 4M
+                        .CTRL_WORD_P(16'h147),  // 1M
+                        .CTRL_WORD_Q(16'h28f5)  // 8M
                     ) input_gen (
                         .i_clk(clk_20M),
                         .o_sin_add(xin),
@@ -436,57 +491,57 @@ module top_mod (
 endmodule
 \end{lstlisting}    
 
-如图~\ref{fig:exp7:waveform}，将eNodeX 1口接入示波器，可观察到叠加频率的输入信号（未经ADC采样）；将ADC端口接入1口，2口接示波器，可获得ADC以20MHz采样频率采样的输入信号经过滤波后的输出结果。
+如图~\ref{fig:exp8:waveform}，将eNodeX 1口接入示波器，可观察到叠加频率的输入信号（未经ADC采样）；将ADC端口接入1口，2口接示波器，可获得ADC以20MHz采样频率采样的输入信号经过滤波后的输出结果。
 \begin{figure}[htbp]
   \centering
-  \subfloat[输入信号]{\includegraphics[width=0.35\textwidth]{figure/exp7/input_7.jpg}}
+  \subfloat[输入信号]{\includegraphics[width=0.35\textwidth]{figure/exp8/input.jpg}}
     \hspace{0.05\textwidth}
-  \subfloat[输出信号]{\includegraphics[width=0.35\textwidth]{figure/exp7/output_7.jpg}}
-  \caption{FIR滤波器输入输出信号的示波器波形}
-  \label{fig:exp7:waveform}
+  \subfloat[输出信号]{\includegraphics[width=0.35\textwidth]{figure/exp8/output.jpg}}
+  \caption{IIR滤波器输入输出信号的示波器波形}
+  \label{fig:exp8:waveform}
 \end{figure}
 
-打开硬件波形查看器ILA，可观察到输出波形中滤除了输入波形中的高频分量。（图~\ref{fig:exp7:sim:ILA}）
+打开硬件波形查看器ILA，可观察到输出波形中滤除了输入波形中的高频分量。（图~\ref{fig:exp8:sim:ILA}）
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width = 0.95\textwidth]{figure/exp7/ILA.png}
+  \includegraphics[width = 0.95\textwidth]{figure/exp8/ILA.png}
   \caption{ILA波形}
-  \label{fig:exp7:sim:ILA}
+  \label{fig:exp8:sim:ILA}
 \end{figure}
 
 \subsection{资源消耗分析}
-Vivado的资源报告如图~\ref{fig:exp7:resource_analysis}所示（包含TOP模块），展示了使用FIR Compiler IP核实现的滤波器在FPGA上的资源消耗情况。可以看到，设计使用了较少的LUT和FF资源，同时DSP资源的使用也在合理范围内。注意到FIR滤波器会使用MMCM资源，因此在实际使用时要合理分配FPGA资源。
+Vivado的资源报告如图~\ref{fig:exp8:resource_analysis}所示（包含TOP模块），展示了使用IIR滤波器在FPGA上的资源消耗情况。可以看到，设计使用了较少的LUT和FF资源，同时DSP资源的使用也在合理范围内。注意到FIR滤波器会使用MMCM资源，因此在实际使用时要合理分配FPGA资源。
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.45\textwidth]{figure/exp7/util_summary.png}
+    \includegraphics[width=0.45\textwidth]{figure/exp8/util_summary.png}
     \caption{资源消耗分析}
-    \label{fig:exp7:resource_analysis}
+    \label{fig:exp8:resource_analysis}
 \end{figure}
 \subsection{时序分析}
 
 时序分析表明，设计满足50MHz的时钟频率要求。
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figure/exp7/timing_summary.png}
+    \includegraphics[width=0.8\textwidth]{figure/exp8/timing_summary.png}
     \caption{时序分析结果}
-    \label{fig:exp7:time_analysis}
+    \label{fig:exp8:time_analysis}
 \end{figure}
 
 具体分析：
 
 \textbf{Setup:}  
 \begin{itemize}
-  \item Worst Negative Slack (WNS): 26.691 ns。表示最差的负时序余量，值为26.691纳秒，说明在时序上存在一定的余量，设计没有违反时序约束。  
+  \item Worst Negative Slack (WNS): 6.521 ns。表示最差的负时序余量，值为6.521纳秒，说明在时序上存在一定的余量，设计没有违反时序约束。  
 \item Total Negative Slack (TNS): 0.00 ns。表示总的负时序余量为零，说明所有时序约束都被满足。  
 \item Number of Failing Endpoints: 0。表示没有时序失败的端点，所有的时序约束都符合要求。  
-\item Total Number of Endpoints: 5364。表示在设计中，共有5364个时序端点。
+\item Total Number of Endpoints: 156。表示在设计中，共有156个时序端点。
 \end{itemize}
 
 
 \textbf{Hold:}  
 \begin{itemize}
-\item Worst Hold Slack (WHS): 0.300 ns。表示最差的保持时序余量，值为0.300纳秒，表明该设计在保持时序方面没有违反约束。  
+\item Worst Hold Slack (WHS): 0.150 ns。表示最差的保持时序余量，值为0.150纳秒，表明该设计在保持时序方面没有违反约束。  
 \item Total Hold Slack (THS): 0.00 ns。表示总的保持时序余量为零，表明所有保持时序约束都被满足。  
 \item Number of Failing Endpoints: 0。表示没有违反保持时序约束的端点。  
 \item Total Number of Endpoints: 5348。表示共有5348个端点。
@@ -494,80 +549,373 @@ Vivado的资源报告如图~\ref{fig:exp7:resource_analysis}所示（包含TOP�
 
 \textbf{Pulse Width:}  
 \begin{itemize}
-  \item Worst Pulse Width Slack (WPWS): 9.500 ns。表示最差的脉冲宽度时序余量，值为9.500纳秒，说明设计在脉冲宽度方面有足够的时序余量。  
+  \item Worst Pulse Width Slack (WPWS): 9.000 ns。表示最差的脉冲宽度时序余量，值为9.000纳秒，说明设计在脉冲宽度方面有足够的时序余量。  
   \item Total Pulse Width Negative Slack (TPWS): 0.00 ns。表示总的脉冲宽度负时序余量为零，表明所有脉冲宽度时序约束都得到满足。  
   \item Number of Failing Endpoints: 0。表示没有违反脉冲宽度时序约束的端点。  
-\item Total Number of Endpoints: 284。表示共有2688个端点。
+\item Total Number of Endpoints: 169。表示共有169个端点。
 \end{itemize}
 
-可以看到 WNS 远远大于之前代码实现的 FIR 滤波器，故从时序余量上看， IP 核实现 的滤波器性能优于代码实现的滤波器。
 \section{思考与讨论}
-\subsection{IP核设计的优缺点}
-\begin{itemize}
-    \item 与手动设计的滤波器相比，使用IP核的设计流程更加高效，但灵活性较低；
-    \item IP核的资源消耗和性能表现与配置参数密切相关，需要根据具体需求进行权衡；
-    \item 在实际应用中，可以结合手动设计和IP核的优点，选择最优的实现方式。
-\end{itemize}
-\subsection{基于IP核的半串行结构的FIR滤波器}
+\subsection{使用乘法器IP代替移位实现分子乘法}
+代码如下：
+\begin{lstlisting}[language=verilog,caption={使用乘法器IP代替移位实现分子乘法}]
+module ZeroParallel (
+    input rst, // Reset signal, active high
+    input clk, // FPGA system clock, 50MHz
+    input signed [11:0] Xin, // Input data, 50MHz
+    output signed [20:0] Xout // Output filtered data
+);
+// Shift register for input samples
+reg signed [11:0] Xin_Reg [6:0];
+reg [3:0] i, j;
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        for (i = 0; i < 7; i = i + 1)
+            Xin_Reg[i] <= 12'd0;
+    end else begin
+        for (j = 0; j < 6; j = j + 1)
+            Xin_Reg[j+1] <= Xin_Reg[j];
+    Xin_Reg[0] <= Xin;
+    end
+end
+ // Sum symmetric inputs
+wire signed [12:0] Add_Reg [3:0];
+assign Add_Reg[0] = Xin + Xin_Reg[6];
+assign Add_Reg[1] = Xin_Reg[0] + Xin_Reg[5];
+assign Add_Reg[2] = Xin_Reg[1] + Xin_Reg[4];
+assign Add_Reg[3] = Xin_Reg[2] + Xin_Reg[3];
+// Coefficients for multipliers
+wire signed [11:0] coe_zero [3:0];
+assign coe_zero[0] = 12'd7; // *7
+assign coe_zero[1] = 12'd21; // *21
+assign coe_zero[2] = 12'd42; // *42
+assign coe_zero[3] = 12'd56; // *56
+// Multiplier outputs
+wire signed [23:0] Mult_Reg [3:0]; 
+MULT U_mult0 (.A (coe_zero[0]), .B (Add_Reg[0]), .P (Mult_Reg[0]));
+MULT U_mult1 (.A (coe_zero[1]), .B (Add_Reg[1]), .P (Mult_Reg[1]));
+MULT U_mult2 (.A (coe_zero[2]), .B (Add_Reg[2]), .P (Mult_Reg[2]));
+MULT U_mult3 (.A (coe_zero[3]), .B (Add_Reg[3]), .P (Mult_Reg[3]));
+// Sum the multiplication results
+assign Xout = Mult_Reg[0][23:3] + Mult_Reg[1][23:3] + Mult_Reg[2][23:3] +
+Mult_Reg[3][23:3];
 
-添加一个二分频器，用作IP核的使能信号，设计代码如代码~\ref{lst:fir_ip_ex2}所示。可以看到，IP核的使能信号为二分频器的输出信号。
-\begin{lstlisting}[language=verilog,caption={基于IP核的半串行结构的FIR滤波器},label=lst:fir_ip_ex2]
-module fir_ip_ex(
-input rst, //复位信号，高电平有效
-input clk, //FPGA 系统时钟，频率为 50MHz
-input signed [11:0] Xin, //输入数据
-output signed [23:0] Yout //滤波后的输出数据
-);
-wire s_data_tready;
-wire m_data_tvalid;
-reg [11:0] Xin_reg;
-reg s_data_tvalid;
-reg toggle; // 用来实现二分频采样
-// 二分频逻辑
-always @(posedge clk or posedge rst) begin
-if (rst) begin
-toggle <= 1'b0;
-end else begin
-toggle <= ~toggle; // 每个 50M 时钟翻转一次，得到 25M 使能
-end
-end
-// 控制 tvalid 和输入数据
-always @(posedge clk or posedge rst) begin
-if (rst) begin
-Xin_reg <= 12'd0;
-s_data_tvalid <= 1'b0;
-end else begin
-if (toggle) begin
-Xin_reg <= Xin;
-s_data_tvalid <= 1'b1; // 只有在 toggle 为 1 时才发送数据
-end else begin
-s_data_tvalid <= 1'b0; // toggle 为 0 时不发送
-end
-end
-end
-// 实例化 FIR IP
-fir_compiler_0 fir_lp15 (
-.aclk(clk), // input wire aclk
-.s_axis_data_tvalid(s_data_tvalid), // input wire s_axis_data_tvalid
-.s_axis_data_tready(s_data_tready), // output wire s_axis_data_tready
-.s_axis_data_tdata(Xin_reg), // input wire [15 : 0] s_axis_data_tdata
-.m_axis_data_tvalid(m_data_tvalid), // output wire m_axis_data_tvalid
- .m_axis_data_tdata(Yout) // output wire [23 : 0] m_axis_data_tdata
-);
 endmodule
 \end{lstlisting}
-
-得到仿真结果如图~\ref{fig:exp7:sim_result2}~所示：
+仿真结果：
 \begin{figure}[htbp]
     \centering
-    \subfloat[正弦叠加信号]{\includegraphics[width=0.45\textwidth]{figure/exp7/sin_half_serial.png}}
-    \hfill
-    \subfloat[白噪声信号]{\includegraphics[width = 0.45\textwidth]{figure/exp7/noise_half_serial.png}}
-    \caption{仿真结果} 
-    \label{fig:exp7:sim_result2}
+    \includegraphics[width=0.8\textwidth]{figure/exp8/add-on.png}
+    \caption{使用乘法器IP代替移位实现分子乘法的仿真结果}
+    \label{fig:exp8:mult_ip_sim}
 \end{figure}
+这种方法使用了更多DSP，相对地减少了LUT的使用。
 
-\section{实验流程加速框架简述}
+\subsection{IIR滤波器参数化设计}
+利用下文中提到的实验流程加速框架，可以对IIR滤波器进行参数化设计。代码如下，可见用户只需要在python层传入\texttt{dwt\_din}，\texttt{dwt\_dout}，以及滤波器系数等参数就可以设计出正确位宽的IIR滤波器。IIR滤波器的内部参数通过python层的溢出逻辑判断，主要基于：
+\begin{itemize}
+    \item 乘法结果为输入位宽加和+1；
+    \item 加法结果需要为输入位宽最大值+1
+\end{itemize}
+两条规则计算。
+
+\begin{lstlisting}[language=python,caption = {IIR滤波器的参数化设计}]
+from pytv.ModuleLoader import moduleloader
+from pytv.Converter import convert
+import math
+import warnings
+
+#NOTE This design is for max precision. May be different from the one in the guideline.
+@convert
+def Moduleiir_direct(din_name = "din", dout_name = "dout", dwt_din: int = 12, dwt_dout: int = 12, if_rst_n = True, num_coeffs = [7,21,42,56], denom_coeffs = [-922, 1163, -811, 412, -122, 24, -2], zero_IP = True,zero_MULT_IP = "MULT", pole_MULT_IP = "MULT"):
+    # Reserve enough bits for num/denom outputs
+    # The adder overflow is considered.
+    zero_output_maxbits = dwt_din + 1 + max(len(bin(abs(coeff))) - 2 for coeff in num_coeffs) + math.ceil(math.log2(len(num_coeffs))) # +1 for the addition, -2 for the '0b'
+    
+    pole_output_maxbits = dwt_dout + 1 + max(len(bin(abs(coeff))) - 2 for coeff in denom_coeffs) + math.ceil(math.log2(len(denom_coeffs))) # +1 for the addition
+    
+    #/`timescale 1ns / 1ps
+    #/ module IIRDirect (
+    #/     input rst,               // Reset signal, active high
+    #/     input clk,               // FPGA system clock, 50MHz
+    #/     input signed [`dwt_din-1`:0] `din_name`,  // Input data
+    #/     output signed [`dwt_dout-1`:0] `dout_name` // Output filtered data
+    #/ );
+    #/ 
+    #/     // Instantiate Zero Parallel block
+    #/     wire signed [`zero_output_maxbits-1`:0] Xout;
+    inst_zero_parallel = {"rst": "rst", "clk": "clk", "Xin": "din", "Xout": "Xout"}
+    if zero_IP:
+        Modulezero_parallel(MULT_IP_NAME=zero_MULT_IP, dwt_xin= dwt_din, dwt_yout= zero_output_maxbits, if_rst_n=True, zero_coeffs= num_coeffs, PORTS = inst_zero_parallel)
+    else:
+        Modulezero_parallel_shift(dwt_xin= dwt_din, dwt_yout= zero_output_maxbits, if_rst_n=True, zero_coeffs= num_coeffs, PORTS = inst_zero_parallel)
+    #/ 
+    #/     // Instantiate Pole Parallel block
+    #/     wire signed [`dwt_dout-1`:0] Yin;
+    #/     wire signed [`pole_output_maxbits-1`:0] Yout;
+    inst_pole_parallel = {"rst": "rst", "clk": "clk", "Yin": "Yin", "Yout": "Yout"}
+    Modulepole_parallel(MULT_IP_NAME=pole_MULT_IP, dwt_yin= dwt_dout, dwt_yout= pole_output_maxbits, if_rst_n=True, pole_coeffs= denom_coeffs, PORTS = inst_pole_parallel)
+    #/ 
+    #/     // Calculate output: (Zero - Pole) / 512
+    #/     wire signed [`pole_output_maxbits-1`:0] Ysum;
+    #/
+    pad_size = pole_output_maxbits - zero_output_maxbits
+    #/     assign Ysum = {{`pad_size`{Xout[`zero_output_maxbits`-1]}}, Xout} - Yout;
+    #/ 
+    #/     wire signed [`pole_output_maxbits-1`:0] Ydiv;
+    #/ 
+    arithmetic_shift = zero_output_maxbits - dwt_dout
+    if arithmetic_shift > 0:
+        #/     assign Ydiv = {{`arithmetic_shift`{Ysum[`pole_output_maxbits-1`]}}, Ysum[`pole_output_maxbits-1`:`arithmetic_shift`]}; // Arithmetic shift the numerator result `arithmetic_shift` bits to fit denominator's input size
+        pass
+    else:
+        #/     assign Ydiv = Ysum;
+        pass
+    #/ 
+    #/     // Final output assignment
+    #/     assign Yin  = (!rst ? `dwt_dout`'d0 : Ydiv[`dwt_dout-1`:0]);
+    #/     assign `dout_name` = Yin;
+    #/ 
+    #/ endmodule
+
+
+    pass
+    
+
+@convert
+def Modulezero_parallel_shift(xin="Xin", yout="Xout", dwt_xin: int = 12, dwt_yout: int = 26, zero_coeffs=None, if_rst_n=True):
+    """
+    Parameters:
+    - xin: Input signal name
+    - yout: Output signal name
+    - dwt_xin: Input bit width
+    - dwt_yout: Output bit width
+    - zero_coeffs: List of zero coefficients (e.g., [7, 21, 42, 56])
+    - if_rst_n: Whether to include reset signal
+    """
+    if zero_coeffs is None:
+        zero_coeffs = [7, 21, 42, 56]  # Default coefficients
+        
+    # Check for potential overflow
+    max_result_bits = dwt_xin + 1 + max(len(bin(coeff)[2:]) for coeff in zero_coeffs)  # +1 for the addition
+    if max_result_bits > dwt_yout:
+        warnings.warn(f"The module may produce overflow results: "
+                     f"dwt_xin={dwt_xin} bits + coefficients (max {max(zero_coeffs)}) "
+                     f"require {max_result_bits} bits, but dwt_yout is only {dwt_yout} bits.")
+                     
+    num_coeffs = len(zero_coeffs)
+    # Calculate required internal bit width to prevent overflow
+    # The multiplier output width should account for coefficient accumulation
+    # We need extra bits to accommodate sum of all coefficients (log2 of the number of terms)
+    internal_bit_width = dwt_yout - math.floor(math.log2(num_coeffs))
+    #/ module ZERO_PARALLEL (
+    #/ 
+    if if_rst_n:
+        #/  rst,
+        pass
+    #/  clk, `xin`, `yout`
+    #/ );
+    #/ 
+    #/ input clk;
+    if if_rst_n:
+        #/ input rst;
+        pass
+    #/ input signed [`dwt_xin-1`:0] `xin`;
+    #/ output signed [`dwt_yout-1`:0] `yout`;
+    #/ 
+    #/ // Shift register for input samples
+    #/ reg signed [`dwt_xin-1`:0] Xin_Reg [`num_coeffs-1`:0];
+    
+    #/ always @(posedge clk or negedge rst) begin
+    #/      if (!rst) begin
+    for i in range(num_coeffs):
+        #/          Xin_Reg[`i`] <= `dwt_xin`'d0;
+        pass
+    #/      end else begin
+    for j in range(num_coeffs - 1):
+        #/          Xin_Reg[`j+1`] <= Xin_Reg[`j`];
+        pass
+    #/          end 
+    #/          Xin_Reg[0] <= `xin`;
+    #/      end
+    #/ end
+    #/ 
+    #/ // Sum symmetric inputs
+    #/ wire signed [`dwt_xin`:0] Add_Reg [`num_coeffs/2-1`:0];
+    for i in range(num_coeffs // 2):
+        #/ assign Add_Reg[`i`] = Xin_Reg[`i`] + Xin_Reg[`num_coeffs-1-i`];
+        pass
+    #/ 
+    #/ // Multiply by coefficients using shifts and additions
+    #/ wire signed [`internal_bit_width-1`:0] Mult_Reg [`num_coeffs/2-1`:0];
+    for i, coeff in enumerate(zero_coeffs[:num_coeffs // 2]):
+        shifts = []
+        for shift, bit in enumerate(bin(coeff)[2:][::-1]):  # Reverse binary representation
+            if bit == '1':
+                shifts.append(f"{{{shift+ dwt_xin}}}, Add_Reg[{i}], {shift}'d0")
+        shift_expr = " + ".join(shifts)
+        #/ assign Mult_Reg[`i`] = `shift_expr`; // *coeff
+        pass
+    #/ 
+    #/ // Sum results
+    output_str = f"Mult_Reg[0]"
+    for i in range(1, num_coeffs // 2):
+        output_str = output_str + f"Mult_Reg[{i}]"
+        pass
+    #/ assign `yout` = `output_str`;
+    #/ endmodule
+    pass
+
+@convert
+def Modulezero_parallel(xin="Xin", yout="Xout", dwt_xin: int = 12, dwt_yout: int = 26, zero_coeffs=None, MULT_IP_NAME="MULT", if_rst_n=True):
+    """
+    Parameters:
+    - xin: Input signal name
+    - yout: Output signal name
+    - dwt_xin: Input bit width
+    - dwt_yout: Output bit width
+    - zero_coeffs: List of zero coefficients (e.g., [7, 21, 42, 56])
+    - MULT_IP_NAME: Name of the multiplier IP
+    - if_rst_n: Whether to include reset signal
+    """
+    if zero_coeffs is None:
+        zero_coeffs = [7, 21, 42, 56]  # Default coefficients
+
+    num_coeffs = len(zero_coeffs)
+    # Calculate required internal bit width to prevent overflow
+    # The multiplier output width should account for coefficient accumulation
+    # We need extra bits to accommodate sum of all coefficients (log2 of the number of terms)
+    internal_bit_width = dwt_yout - math.floor(math.log2(num_coeffs))
+    print(f"Note: The {MULT_IP_NAME} IP must have an output width of at least {internal_bit_width} bits to prevent adder overflow")
+    #/ module ZERO_PARALLEL (
+    #/ 
+    if if_rst_n:
+        #/  rst,
+        pass
+    #/  clk, `xin`, `yout`
+    #/ );
+    #/ 
+    #/ input clk;
+    if if_rst_n:
+        #/ input rst;
+        pass
+    #/ input signed [`dwt_xin-1`:0] `xin`;
+    #/ output signed [`dwt_yout-1`:0] `yout`;
+    #/ 
+    #/ // Shift register for input samples
+    #/ reg signed [`dwt_xin-1`:0] Xin_Reg [`num_coeffs-1`:0];
+    #/ always @(posedge clk or negedge rst) begin
+    #/      if (!rst) begin
+    for i in range(num_coeffs):
+        #/ Xin_Reg[`i`] <= `dwt_xin`'d0;
+        pass
+    #/      end else begin
+    for j in range(num_coeffs - 1):
+        #/ Xin_Reg[`j+1`] <= Xin_Reg[`j`];
+        pass
+    #/          end 
+    #/          Xin_Reg[0] <= `xin`;
+    #/      end
+    #/ end
+    #/ 
+    #/ // Sum symmetric inputs
+    #/ wire signed [`dwt_xin`:0] Add_Reg [`num_coeffs/2-1`:0];
+    for i in range(num_coeffs // 2):
+        #/ assign Add_Reg[`i`] = Xin_Reg[`i`] + Xin_Reg[`num_coeffs-1-i`];
+        pass
+    #/ 
+    #/ // Multiply by coefficients using IP cores
+    #/ wire signed [`internal_bit_width-1`:0] Mult_Reg [`num_coeffs/2-1`:0];
+    for i, coeff in enumerate(zero_coeffs[:num_coeffs // 2]):
+        #/ `MULT_IP_NAME` Umult`i` (.A(Add_Reg[`i`]), .B(`dwt_xin`'d`coeff`), .P(Mult_Reg[`i`]));
+        pass
+    #/ 
+    #/ // Sum results
+    output_str = f"Mult_Reg[0]"
+    for i in range(1, num_coeffs // 2):
+        output_str += f" + Mult_Reg[{i}]"
+    #/ assign `yout` = `output_str`;
+    #/ endmodule
+    pass
+
+
+@convert
+def Modulepole_parallel(yin="Yin", yout="Yout", dwt_yin: int = 12, dwt_yout: int = 26, pole_coeffs=None, MULT_IP_NAME="MULT", if_rst_n=True):
+    """
+    Parameters:
+        yin: Input signal name
+        yout: Output signal name
+        dwt_yin: Input bit width
+        dwt_yout: Output bit width
+        pole_coeffs: List of pole coefficients (e.g., [-922, 1163, -811, 412, -122, 24, -2])
+        MULT_IP_NAME: Name of the multiplier IP
+        if_rst_n: Whether to include reset signal
+    """
+    if pole_coeffs is None:
+        pole_coeffs = [-922, 1163, -811, 412, -122, 24, -2]  # Default coefficients (Decimal)
+
+    num_coeffs = len(pole_coeffs)
+    coe_width = max(len(bin(abs(coeff))) - 2 for coeff in pole_coeffs)  # +1 for the sign
+    # Calculate required internal bit width to prevent overflow
+    # The multiplier output width should account for coefficient accumulation
+    # We need extra bits to accommodate sum of all coefficients (log2 of the number of terms)
+    internal_bit_width = dwt_yout - math.floor(math.log2(num_coeffs))
+    print(f"Note: The {MULT_IP_NAME} IP must have an output width of at least {internal_bit_width} bits to prevent adder overflow")
+    
+    #/`timescale 1ns / 1ps
+    #/ module POLE_PARALLEL (
+    #/ 
+    if if_rst_n:
+        #/  rst,
+        pass
+    #/  clk, `yin`, `yout`
+    #/ );
+    #/ 
+    #/ input clk;
+    if if_rst_n:
+        #/ input rst;
+        pass
+    #/ input signed [`dwt_yin-1`:0] `yin`;
+    #/ output signed [`dwt_yout-1`:0] `yout`;
+    #/ 
+    #/ // Shift register for previous outputs
+    #/ reg signed [`dwt_yin-1`:0] Yin_Reg [`num_coeffs-1`:0];
+    #/ reg [3:0] i, j;
+    #/ always @(posedge clk or negedge rst) begin
+    #/     if (!rst) begin
+    for i in range(num_coeffs):
+        #/         Yin_Reg[`i`] <= `dwt_yin`'d0;
+        pass
+    #/     end else begin
+    for j in range(num_coeffs - 1):
+        #/         Yin_Reg[`j+1`] <= Yin_Reg[`j`];
+        pass
+    #/         Yin_Reg[0] <= `yin`;
+    #/     end
+    #/ end
+    #/ 
+    #/ // Coefficients (user-defined)
+    #/ wire signed [`coe_width-1`:0] coe [`num_coeffs-1`:0];
+    for i, coeff in enumerate(pole_coeffs):
+        #/ assign coe[`i`] = `coeff`;
+        pass
+    #/ 
+    #/ // Multiplier outputs
+    #/ wire signed [`internal_bit_width-1`:0] Mult_Reg [`num_coeffs-1`:0];
+    for i in range(num_coeffs):
+        #/ `MULT_IP_NAME` Umult`i` (.A(coe[`i`]), .B(Yin_Reg[`i`]), .P(Mult_Reg[`i`]));
+        pass
+    #/ 
+    #/ // Sum multiplier outputs
+    output_str = f"Mult_Reg[0]"
+    for i in range(1, num_coeffs):
+        output_str += f" + Mult_Reg[{i}]"
+    #/ assign `yout` = `output_str`;
+    #/ endmodule
+    pass
+\end{lstlisting}
+
+\subsection{实验流程加速框架简述}
 在《系统实验》这门课这次以及之前的实验中，可以发现一次完整的信号分析流程大抵相同，主要包括以下几个步骤：
 \begin{itemize}
     \item 通过FFT IP核的功能仿真确定待滤波信号频谱（实验需求）；
@@ -582,7 +930,7 @@ endmodule
 传统的实验方式需要每次从MATLAB GUI中手动导出COE文件，并在Vivado FIR IP核中引用该COE文件。并且，现有的设计流程需要每次在RTL设计中修改输入输出位宽，并手动修改FIR和FFT IP核的配置参数，过程繁杂且易出错，无法满足快速参数化设计的需求。为此，我们提出一种基于python \texttt{matplotlib, scipy, verithon} 库和Vivado tcl脚本的设计流程加速框架。目前，用户可以基于此框架完成以下功能：
 \begin{itemize}
     \item 生成任意幅度、相位、长度的正弦序列，并支持信号运算、信号定点量化、信号时域/频域分析和信号导出（COE格式或TXT格式）；
-    \item 使用\texttt{scipy.signal}库设计滤波器，用户仅需传入滤波器类型、采样频率、通带阻带边界、滤波器阶数、量化位宽参数，即可自动生成滤波器系数和查看滤波器幅频响应，并提供导出COE格式文件的API；
+    \item 使用\texttt{scipy.signal}库设计FIR、IIR滤波器（滤波效果劣于filterDesigner，但自动化程度更高），用户仅需传入滤波器类型、采样频率、通带阻带边界、滤波器阶数、量化位宽参数，即可自动生成滤波器系数和查看滤波器幅频响应，并提供导出COE格式文件的API；
     \item 提供FFT、串行、并行、半串行FIR滤波器、IIR滤波器的设计模板（基于做过的实验），用户在python层指定参数后，即可自动生成正确位宽的RTL代码。
     \item 提供\texttt{FIR compiler}， \texttt{xfft} IP核的tcl脚本，系统目前支持自动推断IP核需修改的配置参数。
     \item 提供自动生成Testbench的API（文件读写形式的测试），用户可以灵活地指定时钟、复位和输入输出形式。
